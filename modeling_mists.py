@@ -7,7 +7,7 @@ from torch import nn
 
 from transformers import PreTrainedModel
 from transformers.activations import ACT2FN
-from transformers import Cache
+# from transformers import Cache
 from transformers.modeling_outputs import ModelOutput
 from transformers.utils import (
     add_start_docstrings,
