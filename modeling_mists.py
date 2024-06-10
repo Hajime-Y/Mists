@@ -80,7 +80,7 @@ class MistsForConditionalGeneration(MistsPreTrainedModel):
 
         # TODO: Momentは現状事前学習前モデルの作成はできないため、学習済みモデルをロードする。将来的に修正必要。
         self.time_series_tower = MOMENTPipeline.from_pretrained(
-            config.time_series_config.getattr("model_name", "AutonLab/MOMENT-1-large"),
+            config.time_series_config.get("model_name", "AutonLab/MOMENT-1-large"),
             model_kwargs={'task_name': 'embedding'}, # task_nameは必ずembeddingとする。
         )
         self.time_series_tower.init()
