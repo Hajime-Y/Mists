@@ -7,7 +7,7 @@ from torch import nn
 
 from transformers import PreTrainedModel
 from transformers.activations import ACT2FN
-# from transformers import Cache
+from transformers import Cache
 from transformers.modeling_outputs import ModelOutput
 from transformers.utils import (
     add_start_docstrings,
@@ -63,7 +63,7 @@ class MistsPreTrainedModel(PreTrainedModel):
         # important: 現状Mistralの初期化コードをそのまま移植している。
         # refers: https://github.com/huggingface/transformers/blob/25245ec26dc29bcf6102e1b4ddd0dfd02e720cf5/src/transformers/models/mistral/modeling_mistral.py#L762
         # 現状のまま事前学習を行うのは望ましくなく、FineTuningと推論のみが可能。
-        std = self.config.initializer_range
+        std = self.config.text_config.initializer_range
         if isinstance(module, nn.Linear):
             module.weight.data.normal_(mean=0.0, std=std)
             if module.bias is not None:
