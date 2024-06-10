@@ -74,7 +74,7 @@ class MistsPreTrainedModel(PreTrainedModel):
                 module.weight.data[module.padding_idx].zero_()
 
 
-class MistsForConditionalGneration(MistsPreTrainedModel):
+class MistsForConditionalGeneration(MistsPreTrainedModel):
     def __init__(self, config: MistsConfig):
         super().__init__(config)
 
