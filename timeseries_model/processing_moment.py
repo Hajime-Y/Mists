@@ -49,9 +49,9 @@ class MomentProcessor(ProcessorMixin):
         # DataFrame, np.ndarray, または torch.Tensor を torch.Tensor に変換
         if isinstance(time_series, list):
             # リスト内の各要素を torch.Tensor に変換し、最終的には1つのTensorに結合
-            time_series_tensor = torch.stack([self._convert_to_tensor(ts) for ts in time_series])
+            time_series_tensor = torch.stack([self._convert_to_tensor(ts, torch_dtype) for ts in time_series])
         else:
-            time_series_tensor = self._convert_to_tensor(time_series)
+            time_series_tensor = self._convert_to_tensor(time_series, torch_dtype)
 
         # 次元数の確認
         if time_series_tensor.dim() > 3:
