@@ -3,7 +3,6 @@
 from transformers import PretrainedConfig
 from transformers import logging
 
-from transformers import T5Config
 
 DEFAULT_T5_CONFIG = {
     "_name_or_path": "google/flan-t5-large",
@@ -45,7 +44,7 @@ class MomentConfig(PretrainedConfig):
     def __init__(
         self,
         # transformer_backbone: str = "google/flan-t5-base",
-        t5_config: T5Config = T5Config(**DEFAULT_T5_CONFIG),
+        t5_config: dict = DEFAULT_T5_CONFIG,
         d_model: int = None,
         seq_len: int = 512,
         patch_len: int = 16,

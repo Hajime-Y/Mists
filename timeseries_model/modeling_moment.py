@@ -401,11 +401,12 @@ class MomentEmbeddingModel(MomentPreTrainedModel):
         if self.freeze_head:
             self.head = freeze_parameters(self.head)
 
-    def _get_t5_encoder(self, config: T5Config, enable_gradient_checkpointing: bool) -> nn.Module:
+    def _get_t5_encoder(self, config: dict, enable_gradient_checkpointing: bool) -> nn.Module:
         # random initialize
         # Momentでは(言語で)事前学習済みのモデルを取得することもできるようになっている
         # refers: https://github.com/moment-timeseries-foundation-model/moment/blob/088b253a1138ac7e48a7efc9bf902336c9eec8d9/momentfm/models/moment.py#L205
-        t5_model = T5Model(config)
+        t5_config = T5Config.from_dict(config)
+        t5_model = T5Model(t5_config)
         t5_model_encoder = t5_model.get_encoder()
 
         if enable_gradient_checkpointing:
@@ -413,7 +414,7 @@ class MomentEmbeddingModel(MomentPreTrainedModel):
             logger.info("Enabling gradient checkpointing.")
 
         return t5_model_encoder
-    
+
     def embed(
         self,
         x_enc: torch.Tensor,
