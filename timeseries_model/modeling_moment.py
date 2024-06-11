@@ -346,7 +346,7 @@ class MomentPreTrainedModel(PreTrainedModel):
     # 本来のT5の_init_weightsはもっと詳細だが、事前学習の予定はないためここでは簡単にしている。
     # refers: https://github.com/huggingface/transformers/blob/517df566f572d90e6301df87870f651f0d1b1110/src/transformers/models/t5/modeling_t5.py#L810
     def _init_weights(self, module):
-        std = self.config.t5_config.initializer_factor
+        std = self.config.t5_config["initializer_factor"]
         if isinstance(module, nn.Linear):
             module.weight.data.normal_(mean=0.0, std=std)
             if module.bias is not None:

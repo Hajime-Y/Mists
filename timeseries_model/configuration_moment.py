@@ -101,4 +101,4 @@ class MomentConfig(PretrainedConfig):
         Validate configuration.
         """
         if self.d_model is None:
-            self.d_model = self.t5_config.d_model
+            self.d_model = self.t5_config["d_model"]
