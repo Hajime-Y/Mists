@@ -35,16 +35,17 @@ class MomentProcessor(ProcessorMixin):
         self,
         time_series: Union[DataFrame, np.ndarray, torch.Tensor, List[DataFrame], List[np.ndarray], List[torch.Tensor]] = None,
         return_tensors: Optional[Union[str, TensorType]] = TensorType.PYTORCH,
+        torch_dtype: Optional[Union[str, torch.dtype]] = torch.float,
     ) -> BatchFeature:
         if time_series is not None:
-            time_series_values = self._convert_time_series(time_series, return_tensors)
+            time_series_values = self._convert_time_series(time_series, return_tensors, torch_dtype)
         else:
             time_series_values = None
 
         return BatchFeature(data={"time_series_values": time_series_values})
 
 
-    def _convert_time_series(self, time_series, return_tensors):
+    def _convert_time_series(self, time_series, return_tensors, torch_dtype):
         # DataFrame, np.ndarray, または torch.Tensor を torch.Tensor に変換
         if isinstance(time_series, list):
             # リスト内の各要素を torch.Tensor に変換し、最終的には1つのTensorに結合
@@ -81,12 +82,12 @@ class MomentProcessor(ProcessorMixin):
         else:
             raise ValueError("Unsupported return_tensors type")
         
-    def _convert_to_tensor(self, time_series):
+    def _convert_to_tensor(self, time_series, torch_dtype):
         if isinstance(time_series, DataFrame):
-            time_series_tensor = torch.tensor(time_series.values).t()
+            time_series_tensor = torch.tensor(time_series.values, dtype=torch_dtype).t()
         elif isinstance(time_series, np.ndarray):
-            time_series_tensor = torch.tensor(time_series)
+            time_series_tensor = torch.tensor(time_series, dtype=torch_dtype)
         elif isinstance(time_series, torch.Tensor):
-            time_series_tensor = time_series
+            time_series_tensor = time_series.to(torch_dtype)
 
         return time_series_tensor
