@@ -64,6 +64,11 @@ class MomentProcessor(ProcessorMixin):
         batch_size, n_channels, d_model = time_series_tensor.shape
         logger.info(f"Batch size: {batch_size}, Number of channels: {n_channels}, Dimension of model: {d_model}")
 
+        # seq_lenを最大値512までに絞り込み
+        if time_series_tensor.shape[2] > 512:
+            time_series_tensor = time_series_tensor[:, :, :512]
+            logger.info("Sequence length has been truncated to 512.")
+
         # return_tensorsの指定に応じてデータ形式を変換
         if return_tensors == 'pt' or return_tensors == TensorType.PYTORCH:
             return time_series_tensor
