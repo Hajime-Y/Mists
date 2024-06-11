@@ -5,10 +5,10 @@ from transformers import logging
 
 
 DEFAULT_T5_CONFIG = {
-    "_name_or_path": "google/flan-t5-large",
-    "architectures": [
-        "T5ForConditionalGeneration"
-    ],
+    # "_name_or_path": "google/flan-t5-large",
+    # "architectures": [
+    #     "T5ForConditionalGeneration"
+    # ],
     "classifier_dropout": 0.0,
     "d_ff": 2816,
     "d_kv": 64,
@@ -22,7 +22,7 @@ DEFAULT_T5_CONFIG = {
     "is_encoder_decoder": False,
     "is_gated_act": True,
     "layer_norm_epsilon": 1e-06,
-    "model_type": "t5",
+    # "model_type": "t5",
     "n_positions": 512,
     "num_decoder_layers": 24,
     "num_heads": 16,
@@ -32,7 +32,7 @@ DEFAULT_T5_CONFIG = {
     "relative_attention_max_distance": 128,
     "relative_attention_num_buckets": 32,
     "tie_word_embeddings": False,
-    "transformers_version": "4.33.3",
+    # "transformers_version": "4.33.3",
     "use_cache": False,
     "vocab_size": 32128
 }
@@ -69,7 +69,7 @@ class MomentConfig(PretrainedConfig):
         **kwargs
     ):
         # self.transformer_backbone = transformer_backbone
-        self.t5_config = t5_config
+        self.t5_config = self._init_t5_config(t5_config)
         self.d_model = d_model
         self.seq_len = seq_len
         self.patch_len = patch_len
@@ -95,6 +95,15 @@ class MomentConfig(PretrainedConfig):
         self._validation_config()
 
         super().__init__(**kwargs)
+
+    def _init_t5_config(self, config: dict):
+        if config is None:
+            self.t5_config = DEFAULT_T5_CONFIG
+        else:
+            # 与えられたconfigでDEFAULT_T5_CONFIGを更新
+            updated_config = DEFAULT_T5_CONFIG.copy()
+            updated_config.update(config)
+            self.t5_config = updated_config
         
     def _validation_config(self):
         """
