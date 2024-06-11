@@ -24,7 +24,7 @@ class MomentProcessor(ProcessorMixin):
     # TODO: 本来はMoment側のTokenizerもts_tokenizerとして入れたかったが、モデルに組み込まれてしまっている。
     # refers: https://github.com/moment-timeseries-foundation-model/moment/blob/088b253a1138ac7e48a7efc9bf902336c9eec8d9/momentfm/models/moment.py#L105
 
-    attributes = ["time_series_processor"]
+    attributes = []
     tokenizer_class = "AutoProcessor"
 
     def __init__(self):
