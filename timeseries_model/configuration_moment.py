@@ -98,12 +98,12 @@ class MomentConfig(PretrainedConfig):
 
     def _init_t5_config(self, config: dict):
         if config is None:
-            self.t5_config = DEFAULT_T5_CONFIG
+            return DEFAULT_T5_CONFIG
         else:
             # 与えられたconfigでDEFAULT_T5_CONFIGを更新
             updated_config = DEFAULT_T5_CONFIG.copy()
             updated_config.update(config)
-            self.t5_config = updated_config
+            return updated_config
         
     def _validation_config(self):
         """
