@@ -95,7 +95,7 @@ class MomentConfig(PretrainedConfig):
 
         self._validation_config()
 
-        super().__init__(kwargs)
+        super().__init__(**kwargs)
         
     def _validation_config(self):
         """
