@@ -380,19 +380,19 @@ class MomentEmbeddingModel(MomentPreTrainedModel):
             seq_len=config.seq_len,
             patch_len=config.patch_len,
             stride=config.patch_stride_len,
-            dropout=config.getattr("dropout", 0.1),
-            add_positional_embedding=config.getattr("add_positional_embedding", True),
-            value_embedding_bias=config.getattr("value_embedding_bias", False),
-            orth_gain=config.getattr("orth_gain", 1.41),
+            dropout=getattr(config, "dropout", 0.1),
+            add_positional_embedding=getattr(config, "add_positional_embedding", True),
+            value_embedding_bias=getattr(config, "value_embedding_bias", False),
+            orth_gain=getattr(config, "orth_gain", 1.41),
         )
-        self.mask_generator = Masking(mask_ratio=config.getattr("mask_ratio", 0.0))
+        self.mask_generator = Masking(mask_ratio=getattr(config, "mask_ratio", 0.0))
         self.encoder = self._get_t5_encoder(config.t5_config, config.enable_gradient_checkpointing)
         self.head = nn.Identity()
 
         # Frozen parameters
-        self.freeze_embedder = config.getattr("freeze_embedder", True)
-        self.freeze_encoder = config.getattr("freeze_encoder", True)
-        self.freeze_head = config.getattr("freeze_head", False)
+        self.freeze_embedder = getattr(config, "freeze_embedder", True)
+        self.freeze_encoder = getattr(config, "freeze_encoder", True)
+        self.freeze_head = getattr(config, "freeze_head", False)
 
         if self.freeze_embedder:
             self.patch_embedding = freeze_parameters(self.patch_embedding)
