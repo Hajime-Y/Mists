@@ -472,15 +472,15 @@ class MomentEmbeddingModel(MomentPreTrainedModel):
     
     def forward(
         self,
-        x_enc: torch.Tensor,
+        time_series_values: torch.Tensor,
         mask: torch.Tensor = None,
         input_mask: torch.Tensor = None,
         **kwargs,
     ) -> TimeseriesOutputs:
         if input_mask is None:
-            input_mask = torch.ones_like(x_enc[:, 0, :])
+            input_mask = torch.ones_like(time_series_values[:, 0, :])
 
-        return self.embed(x_enc=x_enc, input_mask=input_mask, **kwargs)
+        return self.embed(x_enc=time_series_values, input_mask=input_mask, **kwargs)
 
 
 # refers: https://github.com/moment-timeseries-foundation-model/moment/blob/088b253a1138ac7e48a7efc9bf902336c9eec8d9/momentfm/models/moment.py#L601
