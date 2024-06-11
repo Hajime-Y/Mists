@@ -369,7 +369,7 @@ class MomentEmbeddingModel(MomentPreTrainedModel):
         # 　　　　　　Processor側では入力の512timestepsへの切り取り等、
         # 　　　　　　input validationとTensorへの切り替えを行うで良さそう。
         self.normalizer = RevIN(
-            num_features=1, affine=config.getattr("revin_affine", False)
+            num_features=1, affine=getattr(config, "revin_affine", False)
         )
         self.tokenizer = Patching(
             patch_len=config.patch_len, stride=config.patch_stride_len
