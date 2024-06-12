@@ -3,7 +3,7 @@ import warnings
 from transformers import PretrainedConfig
 from transformers import CONFIG_MAPPING
 
-from .timeseries_model.configuration_moment import MomentConfig
+from .configuration_moment import MomentConfig
 
 class MistsConfig(PretrainedConfig):
     model_type = "mists"
