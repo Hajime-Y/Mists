@@ -77,7 +77,7 @@ class MistsForConditionalGeneration(MistsPreTrainedModel):
     def __init__(self, config: MistsConfig):
         super().__init__(config)
 
-        self.time_series_tower = MomentEmbeddingModel.from_config(config.time_series_config)
+        self.time_series_tower = MomentEmbeddingModel(config.time_series_config)
         self.multi_modal_projector = MistsMultiModalProjector(config)
         self.vocab_size = config.text_config.vocab_size
         self.language_model = AutoModelForCausalLM.from_config(
