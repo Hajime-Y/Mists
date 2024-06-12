@@ -17,9 +17,7 @@ from transformers.utils import (
 )
 from transformers import AutoModel, AutoModelForCausalLM
 
-from timeseries_model.configuration_moment import MomentConfig
-from timeseries_model.modeling_moment import MomentEmbeddingModel
-
+from .timeseries_model.modeling_moment import MomentEmbeddingModel
 from .configuration_mists import MistsConfig
 
 
