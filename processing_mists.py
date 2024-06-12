@@ -25,7 +25,8 @@ class MistsProcessor(ProcessorMixin):
     # この2パーツが本来はts_tokenizerの領分になる気がする。
     # (normalizer): RevIN()
     # (tokenizer): Patching()
-    attributes = ["tokenizer"]
+    attributes = ["time_series_processor", "tokenizer"]
+    time_series_processor_class = "MomentProcessor"
     tokenizer_class = "AutoTokenizer"
 
     def __init__(self, time_series_processor=None, tokenizer=None):

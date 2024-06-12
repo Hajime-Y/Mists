@@ -475,7 +475,7 @@ class MomentEmbeddingModel(MomentPreTrainedModel):
     def forward(
         self,
         time_series_values: torch.Tensor,
-        mask: torch.Tensor = None,
+        # mask: torch.Tensor = None,
         input_mask: torch.Tensor = None,
         **kwargs,
     ) -> TimeseriesOutputs:
