@@ -26,7 +26,7 @@ class MistsProcessor(ProcessorMixin):
     # (normalizer): RevIN()
     # (tokenizer): Patching()
     attributes = ["time_series_processor", "tokenizer"]
-    time_series_processor_class = "AutoProcessor"
+    time_series_processor_class = "MomentProcessor"
     tokenizer_class = "AutoTokenizer"
 
     def __init__(self, time_series_processor=None, tokenizer=None):
