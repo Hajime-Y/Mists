@@ -342,6 +342,8 @@ class MomentPreTrainedModel(PreTrainedModel):
 
     base_model_prefix = "model"
     supports_gradient_checkpointing = True
+    _no_split_modules = ["T5Block"]
+    _skip_keys_device_placement = ""
     
     # 本来のT5の_init_weightsはもっと詳細だが、事前学習の予定はないためここでは簡単にしている。
     # refers: https://github.com/huggingface/transformers/blob/517df566f572d90e6301df87870f651f0d1b1110/src/transformers/models/t5/modeling_t5.py#L810
