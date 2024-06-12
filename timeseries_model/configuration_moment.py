@@ -43,18 +43,14 @@ class MomentConfig(PretrainedConfig):
 
     def __init__(
         self,
-        # transformer_backbone: str = "google/flan-t5-base",
         t5_config: dict = DEFAULT_T5_CONFIG,
         d_model: int = None,
         seq_len: int = 512,
         patch_len: int = 16,
         patch_stride_len: int = 16,
-        # task_name: str = "RECONSTRUCTION",
-        n_channels: int = 1,
-        # num_class: int = 2,
-        # forecast_horizon: int = 96,
         dropout: float = 0.1,
-        # head_dropout: float = 0.1,
+        revin_num_features: int = 1,
+        revin_eps: float = 1e-5,
         revin_affine: bool = True,
         add_positional_embedding: bool = True,
         value_embedding_bias: bool = False,
@@ -65,21 +61,16 @@ class MomentConfig(PretrainedConfig):
         freeze_head: bool = False,
         enable_gradient_checkpointing: bool = True,
         randomly_initialize_backbone: bool = False,
-        # reduction: str = "concat",
         **kwargs
     ):
-        # self.transformer_backbone = transformer_backbone
         self.t5_config = self._init_t5_config(t5_config)
         self.d_model = d_model
         self.seq_len = seq_len
         self.patch_len = patch_len
         self.patch_stride_len = patch_stride_len
-        # self.task_name = task_name
-        self.n_channels = n_channels
-        # self.num_class = num_class
-        # self.forecast_horizon = forecast_horizon
         self.dropout = dropout
-        # self.head_dropout = head_dropout
+        self.revin_num_features = revin_num_features
+        self.revin_eps = revin_eps
         self.revin_affine = revin_affine
         self.add_positional_embedding = add_positional_embedding
         self.value_embedding_bias = value_embedding_bias
@@ -90,7 +81,6 @@ class MomentConfig(PretrainedConfig):
         self.freeze_head = freeze_head
         self.enable_gradient_checkpointing = enable_gradient_checkpointing
         self.randomly_initialize_backbone = randomly_initialize_backbone
-        # self.reduction = reduction
 
         self._validation_config()
 
