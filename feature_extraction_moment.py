@@ -25,8 +25,8 @@ class MomentFeatureExtractor(FeatureExtractionMixin):
 
     model_input_names = ["time_series_values", "input_mask"]
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
 
     def __call__(
