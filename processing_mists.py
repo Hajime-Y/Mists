@@ -29,8 +29,8 @@ class MistsProcessor(ProcessorMixin):
     feature_extractor_class = "AutoFeatureExtractor"
     tokenizer_class = "AutoTokenizer"
 
-    def __init__(self, time_series_processor=None, tokenizer=None):
-        super().__init__(time_series_processor, tokenizer)
+    def __init__(self, feature_extractor=None, tokenizer=None):
+        super().__init__(feature_extractor, tokenizer)
 
 
     def __call__(
@@ -44,7 +44,7 @@ class MistsProcessor(ProcessorMixin):
         torch_dtype: Optional[Union[str, torch.dtype]] = torch.float,
     ) -> BatchFeature:
         if time_series is not None:
-            time_series_values = self.time_series_processor(time_series, return_tensors, torch_dtype)
+            time_series_values = self.feature_extractor(time_series, return_tensors, torch_dtype)
         else:
             time_series_values = None
         text_inputs = self.tokenizer(
