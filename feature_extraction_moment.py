@@ -10,7 +10,7 @@ import torch
 import tensorflow as tf
 import jax.numpy as jnp
 
-from transformers import FeatureExtractor
+from transformers import FeatureExtractionMixin
 from transformers import TensorType
 from transformers import BatchFeature
 from transformers.utils import logging
@@ -18,7 +18,7 @@ from transformers.utils import logging
 logger = logging.get_logger(__name__)
 
 
-class MomentFeatureExtractor(FeatureExtractor):
+class MomentFeatureExtractor(FeatureExtractionMixin):
 
     # TODO: 本来はMoment側のTokenizerもts_tokenizerとして入れたかったが、モデルに組み込まれてしまっている。
     # refers: https://github.com/moment-timeseries-foundation-model/moment/blob/088b253a1138ac7e48a7efc9bf902336c9eec8d9/momentfm/models/moment.py#L105
