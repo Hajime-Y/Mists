@@ -17,7 +17,8 @@ from transformers.utils import (
 )
 from transformers import AutoModel, AutoModelForCausalLM
 
-from momentfm import MOMENTPipeline
+from timeseries_model.configuration_moment import MomentConfig
+from timeseries_model.modeling_moment import MomentEmbeddingModel
 
 from .configuration_mists import MistsConfig
 
@@ -52,7 +53,7 @@ class MistsPreTrainedModel(PreTrainedModel):
     config_class = MistsConfig
     base_model_prefix = "model"
     supports_gradient_checkpointing = True
-    # _no_split_modules = ["MistsTimeSeriesAttention"]
+    _no_split_modules = ["T5Block"]
     _skip_keys_device_placement = "past_key_values"
     _supports_flash_attn_2 = True
     _supports_sdpa = True
@@ -78,13 +79,7 @@ class MistsForConditionalGeneration(MistsPreTrainedModel):
     def __init__(self, config: MistsConfig):
         super().__init__(config)
 
-        # TODO: Momentは現状事前学習前モデルの作成はできないため、学習済みモデルをロードする。将来的に修正必要。
-        self.time_series_tower = MOMENTPipeline.from_pretrained(
-            config.time_series_config.get("model_name", "AutonLab/MOMENT-1-large"),
-            model_kwargs={'task_name': 'embedding'},  # task_nameは必ずembeddingとする。
-        )
-        self.time_series_tower.init()
-
+        self.time_series_tower = MomentEmbeddingModel.from_config(config.time_series_config)
         self.multi_modal_projector = MistsMultiModalProjector(config)
         self.vocab_size = config.text_config.vocab_size
         self.language_model = AutoModelForCausalLM.from_config(
@@ -119,9 +114,6 @@ class MistsForConditionalGeneration(MistsPreTrainedModel):
 
     def tie_weights(self):
         return self.language_model.tie_weights()
-    
-    def resize_token_embeddings(self, new_num_tokens: Optional[int] = None, pad_to_multiple_of=None) -> nn.Embedding:
-        model_embeds = self.language_model.resize
 
     def resize_token_embeddings(self, new_num_tokens: Optional[int] = None, pad_to_multiple_of=None) -> nn.Embedding:
         model_embeds = self.language_model.resize_token_embeddings(new_num_tokens, pad_to_multiple_of)

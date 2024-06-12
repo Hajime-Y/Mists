@@ -25,11 +25,12 @@ class MistsProcessor(ProcessorMixin):
     # この2パーツが本来はts_tokenizerの領分になる気がする。
     # (normalizer): RevIN()
     # (tokenizer): Patching()
-    attributes = ["tokenizer"]
+    attributes = ["time_series_processor", "tokenizer"]
+    processor_class = "AutoProcessor"
     tokenizer_class = "AutoTokenizer"
 
-    def __init__(self, tokenizer=None):
-        super().__init__(tokenizer)
+    def __init__(self, time_series_processor=None, tokenizer=None):
+        super().__init__(time_series_processor, tokenizer)
 
 
     def __call__(
@@ -40,9 +41,10 @@ class MistsProcessor(ProcessorMixin):
         truncation: Union[bool, str, TruncationStrategy] = None,
         max_length=None,
         return_tensors: Optional[Union[str, TensorType]] = TensorType.PYTORCH,
+        torch_dtype: Optional[Union[str, torch.dtype]] = torch.float,
     ) -> BatchFeature:
         if time_series is not None:
-            time_series_values = self._convert_time_series(time_series, return_tensors)
+            time_series_values = self.time_series_processor(time_series, return_tensors, torch_dtype)
         else:
             time_series_values = None
         text_inputs = self.tokenizer(
@@ -50,30 +52,3 @@ class MistsProcessor(ProcessorMixin):
         )
 
         return BatchFeature(data={**text_inputs, "time_series_values": time_series_values})
-
-
-    def _convert_time_series(self, time_series, return_tensors):
-        # DataFrame, np.ndarray, または torch.Tensor を torch.Tensor に変換
-        if isinstance(time_series, DataFrame):
-            time_series_tensor = torch.tensor(time_series.values)
-        elif isinstance(time_series, np.ndarray):
-            time_series_tensor = torch.tensor(time_series)
-        elif isinstance(time_series, torch.Tensor):
-            time_series_tensor = time_series
-        elif isinstance(time_series, list):
-            # リスト内の各要素を torch.Tensor に変換し、最終的には1つのTensorに結合
-            time_series_tensor = torch.stack([torch.tensor(ts.values) if isinstance(ts, DataFrame) else torch.tensor(ts) if isinstance(ts, np.ndarray) else ts for ts in time_series])
-        else:
-            raise ValueError("Unsupported time_series type")
-
-        # return_tensorsの指定に応じてデータ形式を変換
-        if return_tensors == 'pt':
-            return time_series_tensor
-        elif return_tensors == 'np':
-            return time_series_tensor.numpy()
-        elif return_tensors == 'tf':
-            return tf.convert_to_tensor(time_series_tensor.numpy())
-        elif return_tensors == 'jax':
-            return jnp.array(time_series_tensor.numpy())    
-        else:
-            raise ValueError("Unsupported return_tensors type")
