@@ -51,4 +51,4 @@ class MistsProcessor(ProcessorMixin):
             text, return_tensors=return_tensors, padding=padding, truncation=truncation, max_length=max_length
         )
 
-        return BatchFeature(data={**text_inputs, "time_series_values": time_series_values})
+        return BatchFeature(data={**text_inputs, **time_series_values})
