@@ -232,7 +232,7 @@ class MistsForConditionalGeneration(MistsPreTrainedModel):
         #     else self.config.vision_feature_select_strategy
         # )
 
-        if inputs_embeds:
+        if inputs_embeds is None:
             # 1. Extra the input embeddings
             inputs_embeds = self.get_input_embeddings()(input_ids)
 
