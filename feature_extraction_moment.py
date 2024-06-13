@@ -40,7 +40,7 @@ class MomentFeatureExtractor(FeatureExtractionMixin):
         else:
             time_series_values = None
 
-        return BatchFeature(data=time_series_values)
+        return BatchFeature(data={"time_series_values": time_series_values})
 
 
     def _convert_time_series(self, time_series, return_tensors, torch_dtype):
