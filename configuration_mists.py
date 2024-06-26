@@ -12,7 +12,7 @@ class MistsConfig(PretrainedConfig):
         self, 
         time_series_config=None,
         text_config=None,
-        # ignore_index=-100,
+        ignore_index=-100,
         time_series_token_index=32000,
         projector_hidden_act="gelu",  # projector用
         # time_series_feature_select_strategy="default",  # TODO: modelのforward用(画像モデルのhidden_stateからEmbeddingをどう取得するか)。将来的に対応。
@@ -21,7 +21,7 @@ class MistsConfig(PretrainedConfig):
         **kwargs,
     ):
         
-        # self.ignore_index = ignore_index
+        self.ignore_index = ignore_index
         self.time_series_token_index = time_series_token_index
         self.projector_hidden_act = projector_hidden_act
         self.time_series_hidden_size = time_series_hidden_size

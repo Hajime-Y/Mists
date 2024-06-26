@@ -39,12 +39,20 @@ class MistsProcessor(ProcessorMixin):
         time_series: Union[DataFrame, np.ndarray, torch.Tensor, List[DataFrame], List[np.ndarray], List[torch.Tensor]] = None,
         padding: Union[bool, str, PaddingStrategy] = False,
         truncation: Union[bool, str, TruncationStrategy] = None,
-        max_length=None,
+        max_length: Union[int, None] = None,
         return_tensors: Optional[Union[str, TensorType]] = TensorType.PYTORCH,
         torch_dtype: Optional[Union[str, torch.dtype]] = torch.float,
+        time_series_padding: Union[bool, str] = False,
+        time_series_max_length: Union[int, None] = None,
     ) -> BatchFeature:
         if time_series is not None:
-            time_series_values = self.feature_extractor(time_series, return_tensors, torch_dtype)
+            time_series_values = self.feature_extractor(
+                time_series, 
+                return_tensors=return_tensors, 
+                torch_dtype=torch_dtype, 
+                padding=time_series_padding, 
+                time_series_max_length=time_series_max_length
+            )
         else:
             time_series_values = None
         text_inputs = self.tokenizer(

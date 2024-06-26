@@ -31,6 +31,7 @@ class TimeseriesOutputs:
     metadata: dict = None
     illegal_output: bool = False
     hidden_states: npt.NDArray = None  # For Mists model
+    input_mask_patch_view: npt.NDArray = None  # For Mists model
 
 
 # refers: https://github.com/moment-timeseries-foundation-model/moment/blob/088b253a1138ac7e48a7efc9bf902336c9eec8d9/momentfm/utils/masking.py#L6C1-L6C2
@@ -365,6 +366,7 @@ class MomentEmbeddingModel(MomentPreTrainedModel):
         self.config = config
         self.seq_len = config.seq_len
         self.patch_len = config.patch_len
+        self.patch_stride_len = config.patch_stride_len
 
         # TODO: normalizer, tokenizerはProcessor側に配置するべきか？
         # 現状の考え: 特にMomentから切り離す用途もない。
@@ -432,6 +434,7 @@ class MomentEmbeddingModel(MomentPreTrainedModel):
         x_enc = self.normalizer(x=x_enc, mask=input_mask, mode="norm")
         x_enc = torch.nan_to_num(x_enc, nan=0, posinf=0, neginf=0)
 
+        # [batch_size x n_patches]
         input_mask_patch_view = Masking.convert_seq_to_patch_view(
             input_mask, self.patch_len
         )
@@ -448,13 +451,10 @@ class MomentEmbeddingModel(MomentPreTrainedModel):
         attention_mask = patch_view_mask.repeat_interleave(n_channels, dim=0)
         outputs = self.encoder(inputs_embeds=enc_in, attention_mask=attention_mask)
         enc_out = outputs.last_hidden_state
+        hidden_states = outputs.last_hidden_state  # hidden_statesを取得
 
         enc_out = enc_out.reshape((-1, n_channels, n_patches, self.config.d_model))
         # [batch_size x n_channels x n_patches x d_model]
-
-        # For Mists model
-        # [batch_size, n_channels x n_patches, d_model]
-        hidden_states = enc_out.reshape(batch_size, n_channels * n_patches, self.config.d_model)
 
         if reduction == "mean":
             enc_out = enc_out.mean(dim=1, keepdim=False)  # Mean across channels
@@ -467,9 +467,30 @@ class MomentEmbeddingModel(MomentPreTrainedModel):
             ) / input_mask_patch_view.sum(dim=1)
         else:
             raise NotImplementedError(f"Reduction method {reduction} not implemented.")
+        
+        # For Mists model
+        # [batch_size, n_channels x n_patches, d_model]
+        # Ensure hidden_states are consistent for both short and long inputs with input_mask specified
+        # hidden_states = hidden_states.reshape(batch_size, n_channels, n_patches, self.config.d_model).transpose(1, 2).reshape(batch_size, -1, self.config.d_model)
+        # [batch_size x n_patches]
+        input_mask_patch_view_for_hidden_states = Masking.convert_seq_to_patch_view(input_mask, self.patch_len)
+        # [batch_size　x n_channels x n_patches x d_model]
+        input_mask_patch_view_for_hidden_states = input_mask_patch_view_for_hidden_states.unsqueeze(1).unsqueeze(-1).repeat(
+            1, n_channels, 1, self.config.d_model
+        )
+        # [batch_size x n_channels x n_patches x d_model]
+        hidden_states = hidden_states.reshape(batch_size, n_channels, n_patches, self.config.d_model)
+        hidden_states = input_mask_patch_view_for_hidden_states * hidden_states
+        # [batch_size, n_channels x n_patches, d_model]
+        hidden_states = hidden_states.transpose(1, 2).reshape(batch_size, -1, self.config.d_model)
+        
+        # [batch_size x n_patches]
+        input_mask_patch_view_for_mists = Masking.convert_seq_to_patch_view(input_mask, self.patch_len)
+        # [batch_size, n_channels x n_patches]
+        input_mask_patch_view_for_mists = input_mask_patch_view_for_mists.repeat_interleave(n_channels, dim=1)
 
         return TimeseriesOutputs(
-            embeddings=enc_out, input_mask=input_mask, metadata=reduction, hidden_states=hidden_states
+            embeddings=enc_out, input_mask=input_mask, metadata=reduction, hidden_states=hidden_states, input_mask_patch_view=input_mask_patch_view_for_mists
         )
     
     def forward(
@@ -483,6 +504,21 @@ class MomentEmbeddingModel(MomentPreTrainedModel):
             input_mask = torch.ones_like(time_series_values[:, 0, :])
 
         return self.embed(x_enc=time_series_values, input_mask=input_mask, **kwargs)
+    
+    def calculate_n_patches(self, seq_len: int) -> int:
+        """
+        時系列の長さ（seq_len）を与えて、モデルのself.patch_lenとself.strideを使ってn_patchesを計算して返します。
+        strideがNoneの場合はpatch_lenを使用します。
+
+        Args:
+            seq_len (int): 時系列の長さ
+
+        Returns:
+            int: 計算されたn_patchesの数
+        """
+        stride = self.patch_stride_len if self.patch_stride_len is not None else self.patch_len
+        n_patches = (seq_len - self.patch_len) // stride + 1
+        return n_patches
 
 
 # refers: https://github.com/moment-timeseries-foundation-model/moment/blob/088b253a1138ac7e48a7efc9bf902336c9eec8d9/momentfm/models/moment.py#L601

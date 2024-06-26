@@ -36,12 +36,17 @@ class MistsMultiModalProjector(nn.Module):
     def __init__(self, config: MistsConfig):
         super().__init__()
 
+        # time series towerからのoutputは定型でない。input_maskに合わせてpadding用の学習可能なベクトルを使用し、time series towerからの入力を定型にする。
+        self.mask_embedding = nn.Parameter(torch.randn(1, 1, config.time_series_hidden_size))
+        
+        # mlp
         self.linear_1 = nn.Linear(config.time_series_hidden_size, config.text_config.hidden_size, bias=True)
         self.act = ACT2FN[config.projector_hidden_act]
         self.linear_2 = nn.Linear(config.text_config.hidden_size, config.text_config.hidden_size, bias=True)
 
-    def forward(self, time_series_features):
-        hidden_states = self.linear_1(time_series_features)
+    def forward(self, time_series_features, input_mask):
+        masked_features = time_series_features * input_mask.unsqueeze(-1) + self.mask_embedding * (1 - input_mask.unsqueeze(-1))
+        hidden_states = self.linear_1(masked_features)
         hidden_states = self.act(hidden_states)
         hidden_states = self.linear_2(hidden_states)
         return hidden_states
@@ -131,6 +136,13 @@ class MistsForConditionalGeneration(MistsPreTrainedModel):
         num_special_time_series_tokens = torch.sum(special_time_series_token_mask, dim=-1)
         # Compute the maximum embed dimension
         max_embed_dim = (num_special_time_series_tokens.max() * (num_time_series_patches - 1)) + sequence_length
+        max_embed_dim = int(max_embed_dim.item())  # テンソルから整数値を取得
+        if max_embed_dim is None:
+            print(f"num_special_time_series_tokens.max(): {num_special_time_series_tokens.max()}")
+            print(f"num_time_series_patches: {num_time_series_patches}")
+            print(f"sequence_length: {sequence_length}")
+        else:
+            print(f"max_embed_dim 0: {max_embed_dim}")
         batch_indices, non_time_series_indices = torch.where(input_ids != self.config.time_series_token_index)
 
         # 2. Compute the positions where text should be written
@@ -169,10 +181,16 @@ class MistsForConditionalGeneration(MistsPreTrainedModel):
         # we need to index copy on [0, 577, 578, 579] for the text and [1:576] for the time_series features
         final_embedding[batch_indices, text_to_overwrite] = inputs_embeds[batch_indices, non_time_series_indices]
         final_attention_mask[batch_indices, text_to_overwrite] = attention_mask[batch_indices, non_time_series_indices]
+        print("max_embed_dim is None: ", (max_embed_dim is None))
+        print("max_embed_dim: ", max_embed_dim)
         if labels is not None:
             final_labels[batch_indices, text_to_overwrite] = labels[batch_indices, non_time_series_indices]
+        print("max_embed_dim is None: ", (max_embed_dim is None))
+        print("max_embed_dim: ", max_embed_dim)
 
         # 5. Fill the embeddings corresponding to the time_series. Anything that is not `text_positions` needs filling (#29835)
+        print("inputs_embeds.device: ", inputs_embeds.device)
+        print("max_embed_dim: ", max_embed_dim, " is None: ", (max_embed_dim is None))
         time_series_to_overwrite = torch.full(
             (batch_size, max_embed_dim), True, dtype=torch.bool, device=inputs_embeds.device
         )
@@ -204,6 +222,7 @@ class MistsForConditionalGeneration(MistsPreTrainedModel):
         self,
         input_ids: torch.LongTensor = None,
         time_series_values: torch.FloatTensor = None,
+        time_series_input_mask: torch.FloatTensor = None,
         attention_mask: Optional[torch.Tensor] = None,
         position_ids: Optional[torch.LongTensor] = None,
         past_key_values: Optional[List[torch.FloatTensor]] = None,
@@ -238,9 +257,11 @@ class MistsForConditionalGeneration(MistsPreTrainedModel):
 
             # 2. Merge text and time_series
             if time_series_values is not None and input_ids.shape[1] != 1:
-                time_series_outputs = self.time_series_tower(time_series_values)
-                time_series_outputs = time_series_outputs.hidden_states
-                time_series_features = self.multi_modal_projector(time_series_outputs)
+                time_series_outputs = self.time_series_tower(time_series_values, time_series_input_mask)
+                time_series_features = self.multi_modal_projector(
+                    time_series_features=time_series_outputs.hidden_states,  # [batch_size, n_patches, d_model]
+                    input_mask=time_series_outputs.input_mask_patch_view,    # [batch_size, n_paches]
+                )
 
                 inputs_embeds = inputs_embeds.to(time_series_features.dtype)
                 inputs_embeds, attention_mask, labels, position_ids =self._merge_input_ids_with_time_series_features(
@@ -284,7 +305,7 @@ class MistsForConditionalGeneration(MistsPreTrainedModel):
             attention_mask=attention_mask,
             position_ids=position_ids,
             past_key_values=past_key_values,
-            inputs_embeds=inputs_embeds,
+            inputs_embeds=inputs_embeds.to(self.language_model.dtype),
             use_cache=use_cache,
             output_attentions=output_attentions,
             output_hidden_states=output_hidden_states,
