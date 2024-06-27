@@ -137,12 +137,6 @@ class MistsForConditionalGeneration(MistsPreTrainedModel):
         # Compute the maximum embed dimension
         max_embed_dim = (num_special_time_series_tokens.max() * (num_time_series_patches - 1)) + sequence_length
         max_embed_dim = int(max_embed_dim.item())  # テンソルから整数値を取得
-        if max_embed_dim is None:
-            print(f"num_special_time_series_tokens.max(): {num_special_time_series_tokens.max()}")
-            print(f"num_time_series_patches: {num_time_series_patches}")
-            print(f"sequence_length: {sequence_length}")
-        else:
-            print(f"max_embed_dim 0: {max_embed_dim}")
         batch_indices, non_time_series_indices = torch.where(input_ids != self.config.time_series_token_index)
 
         # 2. Compute the positions where text should be written
@@ -181,16 +175,10 @@ class MistsForConditionalGeneration(MistsPreTrainedModel):
         # we need to index copy on [0, 577, 578, 579] for the text and [1:576] for the time_series features
         final_embedding[batch_indices, text_to_overwrite] = inputs_embeds[batch_indices, non_time_series_indices]
         final_attention_mask[batch_indices, text_to_overwrite] = attention_mask[batch_indices, non_time_series_indices]
-        print("max_embed_dim is None: ", (max_embed_dim is None))
-        print("max_embed_dim: ", max_embed_dim)
         if labels is not None:
             final_labels[batch_indices, text_to_overwrite] = labels[batch_indices, non_time_series_indices]
-        print("max_embed_dim is None: ", (max_embed_dim is None))
-        print("max_embed_dim: ", max_embed_dim)
 
         # 5. Fill the embeddings corresponding to the time_series. Anything that is not `text_positions` needs filling (#29835)
-        print("inputs_embeds.device: ", inputs_embeds.device)
-        print("max_embed_dim: ", max_embed_dim, " is None: ", (max_embed_dim is None))
         time_series_to_overwrite = torch.full(
             (batch_size, max_embed_dim), True, dtype=torch.bool, device=inputs_embeds.device
         )

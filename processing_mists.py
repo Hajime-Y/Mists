@@ -51,7 +51,7 @@ class MistsProcessor(ProcessorMixin):
                 return_tensors=return_tensors, 
                 torch_dtype=torch_dtype, 
                 padding=time_series_padding, 
-                time_series_max_length=time_series_max_length
+                max_length=time_series_max_length
             )
         else:
             time_series_values = None
